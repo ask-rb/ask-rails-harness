@@ -44,17 +44,17 @@ class PersistenceTest < Minitest::Test
   end
 
   def test_persistence_initializes
-    p = Ask::Rails::Persistence.new
+    p = Ask::Rails::Harness::Persistence.new
     assert p
   end
 
   def test_model_class_as_constructor_arg
-    p = Ask::Rails::Persistence.new(model_class: FakeModel)
+    p = Ask::Rails::Harness::Persistence.new(model_class: FakeModel)
     assert p
   end
 
   def test_persistence_interface
-    p = Ask::Rails::Persistence.new(model_class: FakeModel)
+    p = Ask::Rails::Harness::Persistence.new(model_class: FakeModel)
     # State::Adapter contract
     assert_respond_to p, :set
     assert_respond_to p, :get
@@ -66,7 +66,7 @@ class PersistenceTest < Minitest::Test
   end
 
   def test_set_and_get_roundtrip
-    p = Ask::Rails::Persistence.new(model_class: FakeModel)
+    p = Ask::Rails::Harness::Persistence.new(model_class: FakeModel)
     data = { id: "session-1", messages: [{ role: "user", content: "hello" }] }
     p.set("session-1", data)
     result = p.get("session-1")
@@ -75,26 +75,26 @@ class PersistenceTest < Minitest::Test
   end
 
   def test_get_missing
-    p = Ask::Rails::Persistence.new(model_class: FakeModel)
+    p = Ask::Rails::Harness::Persistence.new(model_class: FakeModel)
     assert_nil p.get("nonexistent")
   end
 
   def test_save_covers_old_interface
-    p = Ask::Rails::Persistence.new(model_class: FakeModel)
+    p = Ask::Rails::Harness::Persistence.new(model_class: FakeModel)
     p.save("s1", { messages: ["hello"] })
     loaded = p.load("s1")
     assert_equal "hello", loaded[:messages][0]
   end
 
   def test_delete_removes
-    p = Ask::Rails::Persistence.new(model_class: FakeModel)
+    p = Ask::Rails::Harness::Persistence.new(model_class: FakeModel)
     p.set("k", { v: 1 })
     p.delete("k")
     assert_nil p.get("k")
   end
 
   def test_lists_sessions
-    p = Ask::Rails::Persistence.new(model_class: FakeModel)
+    p = Ask::Rails::Harness::Persistence.new(model_class: FakeModel)
     p.set("a", {})
     p.set("b", {})
     assert_includes p.list, "a"
@@ -102,10 +102,10 @@ class PersistenceTest < Minitest::Test
   end
 
   def test_defaults_to_ask_rails_session_when_available
-    unless defined?(Ask::Rails::Session)
-      skip "Ask::Rails::Session not loaded in test environment"
+    unless defined?(Ask::Rails::Harness::Session)
+      skip "Ask::Rails::Harness::Session not loaded in test environment"
     end
-    p = Ask::Rails::Persistence.new
-    assert_equal Ask::Rails::Session, p.send(:model_class)
+    p = Ask::Rails::Harness::Persistence.new
+    assert_equal Ask::Rails::Harness::Session, p.send(:model_class)
   end
 end

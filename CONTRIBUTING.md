@@ -1,9 +1,9 @@
-# Contributing to ask-ask-rails
+# Contributing to ask-rails-harness
 
 ## Development Setup
 
 ```bash
-git clone <repo-url> && cd ask-rb/ask-rails
+git clone <repo-url> && cd ask-rb/ask-rails-harness
 bundle install
 ```
 

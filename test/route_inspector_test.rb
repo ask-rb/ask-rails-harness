@@ -4,7 +4,7 @@ require_relative "test_helper"
 
 class RouteInspectorTest < Minitest::Test
   def setup
-    @tool = Ask::Rails::Tools::RouteInspector.new
+    @tool = Ask::Rails::Harness::Tools::RouteInspector.new
   end
 
   def test_defines_correct_name
@@ -18,7 +18,7 @@ class RouteInspectorTest < Minitest::Test
   end
 
   def test_inherits_from_ask_rails_tool
-    assert Ask::Rails::Tools::RouteInspector.ancestors.include?(Ask::Rails::Tool)
+    assert Ask::Rails::Harness::Tools::RouteInspector.ancestors.include?(Ask::Rails::Harness::Tool)
   end
 
   def test_returns_hash_with_routes_and_count

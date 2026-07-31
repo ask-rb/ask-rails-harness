@@ -8,7 +8,7 @@ class SchemaGraphTest < Minitest::Test
   @@fixture_created = false
 
   def setup
-    @tool = Ask::Rails::Tools::SchemaGraph.new
+    @tool = Ask::Rails::Harness::Tools::SchemaGraph.new
     ensure_fixture_db
   end
 
@@ -23,7 +23,7 @@ class SchemaGraphTest < Minitest::Test
   end
 
   def test_inherits_from_ask_rails_tool
-    assert Ask::Rails::Tools::SchemaGraph.ancestors.include?(Ask::Rails::Tool)
+    assert Ask::Rails::Harness::Tools::SchemaGraph.ancestors.include?(Ask::Rails::Harness::Tool)
   end
 
   def test_returns_hash_with_summary

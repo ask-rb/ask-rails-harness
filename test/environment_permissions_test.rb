@@ -4,7 +4,7 @@ require_relative "test_helper"
 
 class EnvironmentPermissionsTest < Minitest::Test
   def setup
-    @env = Ask::Rails::EnvironmentPermissions.new
+    @env = Ask::Rails::Harness::EnvironmentPermissions.new
   end
 
   def test_defaults_are_nil
@@ -30,13 +30,13 @@ class EnvironmentPermissionsTest < Minitest::Test
   end
 
   def test_configured_via_config_block
-    Ask::Rails.configuration.environment :staging do |env|
+    Ask::Rails::Harness.configuration.environment :staging do |env|
       env.mode = :ask_before_changes
       env.allowed_commands = [/^rails /]
       env.denied_commands = [/rm /]
     end
 
-    env_config = Ask::Rails.configuration.environments[:staging]
+    env_config = Ask::Rails::Harness.configuration.environments[:staging]
     assert_equal :ask_before_changes, env_config.mode
     assert_equal [/^rails /], env_config.allowed_commands
     assert_equal [/rm /], env_config.denied_commands

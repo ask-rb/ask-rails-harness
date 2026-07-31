@@ -1,6 +1,0 @@
-<!-- Chat interface rendered by the layout -->
-<!-- The layout handles the full UI. This view is minimal -->
-<!-- since the layout and JavaScript drive the interface. -->
-
-<%= tag.div id: "ask-rails-data",
-      data: { sessions: @sessions.to_json, active_session_id: @active_session&.dig(:id) } %>

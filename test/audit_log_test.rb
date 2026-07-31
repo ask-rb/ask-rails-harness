@@ -6,13 +6,13 @@ require "tmpdir"
 
 class AuditLogTest < Minitest::Test
   def setup
-    @original_current_user = Ask::Rails.configuration.current_user
+    @original_current_user = Ask::Rails::Harness.configuration.current_user
     ensure_test_db
-    Ask::Rails::AuditLog.reset_table_check!
+    Ask::Rails::Harness::AuditLog.reset_table_check!
   end
 
   def teardown
-    Ask::Rails.configuration.current_user = @original_current_user
+    Ask::Rails::Harness.configuration.current_user = @original_current_user
     clear_logs
   end
 
@@ -21,7 +21,7 @@ class AuditLogTest < Minitest::Test
   def test_logs_a_successful_tool_call
     result = { rows: [{ "id" => 1 }], columns: %w[id] }
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "session-1",
       tool_name: "query_database",
       params: { sql: "SELECT * FROM users", limit: 50 },
@@ -39,7 +39,7 @@ class AuditLogTest < Minitest::Test
   def test_logs_a_failed_tool_call
     result = Ask::Result.failure("Write statements not allowed")
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "session-1",
       tool_name: "query_database",
       params: { sql: "DROP TABLE users" },
@@ -54,7 +54,7 @@ class AuditLogTest < Minitest::Test
   def test_logs_an_exception
     error = RuntimeError.new("Connection timeout")
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "session-1",
       tool_name: "run_command",
       params: { command: "sleep 60" },
@@ -67,7 +67,7 @@ class AuditLogTest < Minitest::Test
   end
 
   def test_redacts_sensitive_params
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "session-1",
       tool_name: "run_command",
       params: { command: "echo hello", password: "secret123", api_key: "sk-xxx" },
@@ -82,7 +82,7 @@ class AuditLogTest < Minitest::Test
   def test_builds_query_summary
     result = { rows: [{ "id" => 1 }, { "id" => 2 }], columns: %w[id name email] }
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "query_database",
       params: { sql: "SELECT * FROM users" }, result: result, duration_ms: 10
     )
@@ -94,7 +94,7 @@ class AuditLogTest < Minitest::Test
   def test_builds_command_summary
     result = { output: "done", exit_status: 0 }
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "run_command",
       params: { command: "rails routes" }, result: result, duration_ms: 120
     )
@@ -105,7 +105,7 @@ class AuditLogTest < Minitest::Test
   def test_builds_model_summary
     result = { name: "User", table_name: "users", columns: [] }
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "read_model",
       params: { name: "User" }, result: result, duration_ms: 4
     )
@@ -116,7 +116,7 @@ class AuditLogTest < Minitest::Test
   def test_builds_read_log_summary
     result = { lines: ["error"], total_lines: 100, matched_lines: 1 }
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "read_log",
       params: { lines: 50, level: "ERROR" }, result: result, duration_ms: 8
     )
@@ -125,9 +125,9 @@ class AuditLogTest < Minitest::Test
   end
 
   def test_includes_user_context_when_configured
-    Ask::Rails.configuration.current_user = -> { { id: 42, email: "admin@test.com" } }
+    Ask::Rails::Harness.configuration.current_user = -> { { id: 42, email: "admin@test.com" } }
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "read_file",
       params: { path: "app/models/user.rb" }, duration_ms: 3
     )
@@ -137,9 +137,9 @@ class AuditLogTest < Minitest::Test
   end
 
   def test_user_context_is_nil_when_not_configured
-    Ask::Rails.configuration.current_user = nil
+    Ask::Rails::Harness.configuration.current_user = nil
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "read_file",
       params: { path: "app/models/user.rb" }, duration_ms: 3
     )
@@ -148,9 +148,9 @@ class AuditLogTest < Minitest::Test
   end
 
   def test_user_context_is_nil_when_proc_returns_non_hash
-    Ask::Rails.configuration.current_user = -> { "just a string" }
+    Ask::Rails::Harness.configuration.current_user = -> { "just a string" }
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "read_file",
       params: { path: "test.rb" }, duration_ms: 3
     )
@@ -159,9 +159,9 @@ class AuditLogTest < Minitest::Test
   end
 
   def test_user_context_gracefully_handles_proc_error
-    Ask::Rails.configuration.current_user = -> { raise "oops" }
+    Ask::Rails::Harness.configuration.current_user = -> { raise "oops" }
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "read_file",
       params: { path: "test.rb" }, duration_ms: 3
     )
@@ -171,11 +171,11 @@ class AuditLogTest < Minitest::Test
 
   def test_fires_active_support_notification
     events = []
-    subscriber = ActiveSupport::Notifications.subscribe("audit_log.ask_rails") do |_name, _start, _finish, _id, payload|
+    subscriber = ActiveSupport::Notifications.subscribe("audit_log.ask_rails_harness") do |_name, _start, _finish, _id, payload|
       events << payload
     end
 
-    Ask::Rails::AuditLog.log(
+    Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "read_file",
       params: { path: "test.rb" }, duration_ms: 5
     )
@@ -187,7 +187,7 @@ class AuditLogTest < Minitest::Test
   end
 
   def test_writes_to_database
-    Ask::Rails::AuditLog.log(
+    Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "read_file",
       params: { path: "test.rb" }, duration_ms: 5
     )
@@ -198,7 +198,7 @@ class AuditLogTest < Minitest::Test
 
   def test_logs_are_append_only
     3.times do |i|
-      Ask::Rails::AuditLog.log(
+      Ask::Rails::Harness::AuditLog.log(
         session_id: "s1", tool_name: "read_file",
         params: { path: "test.rb" }, duration_ms: i
       )
@@ -211,7 +211,7 @@ class AuditLogTest < Minitest::Test
   def test_parses_rejected_result_error_in_summary
     result = Ask::Result.failure("Write statements not allowed in production")
 
-    entry = Ask::Rails::AuditLog.log(
+    entry = Ask::Rails::Harness::AuditLog.log(
       session_id: "s1", tool_name: "query_database",
       params: { sql: "DROP TABLE users" }, result: result, duration_ms: 2
     )

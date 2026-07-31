@@ -4,7 +4,7 @@ require_relative "test_helper"
 
 class GemspecTest < Minitest::Test
   def test_gemspec_is_valid
-    spec = Gem::Specification.load(File.expand_path("../ask-rails.gemspec", __dir__))
+    spec = Gem::Specification.load(File.expand_path("../ask-rails-harness.gemspec", __dir__))
     assert spec
     assert_kind_of Gem::Specification, spec
     assert spec.name.to_s.start_with?("ask-")

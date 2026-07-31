@@ -4,13 +4,13 @@ require_relative "test_helper"
 
 class ToolsTest < Minitest::Test
   def setup
-    @read_file = Ask::Rails::Tools::ReadFile.new
-    @run_command = Ask::Rails::Tools::RunCommand.new
-    @search_codebase = Ask::Rails::Tools::SearchCodebase.new
-    @read_routes = Ask::Rails::Tools::ReadRoutes.new
-    @query_database = Ask::Rails::Tools::QueryDatabase.new
-    @read_model = Ask::Rails::Tools::ReadModel.new
-    @read_log = Ask::Rails::Tools::ReadLog.new
+    @read_file = Ask::Rails::Harness::Tools::ReadFile.new
+    @run_command = Ask::Rails::Harness::Tools::RunCommand.new
+    @search_codebase = Ask::Rails::Harness::Tools::SearchCodebase.new
+    @read_routes = Ask::Rails::Harness::Tools::ReadRoutes.new
+    @query_database = Ask::Rails::Harness::Tools::QueryDatabase.new
+    @read_model = Ask::Rails::Harness::Tools::ReadModel.new
+    @read_log = Ask::Rails::Harness::Tools::ReadLog.new
   end
 
   def test_read_file_defines_correct_params
@@ -98,68 +98,68 @@ class ToolsTest < Minitest::Test
   end
 
   def test_run_command_blocked_by_denied_pattern
-    original_denied = Ask::Rails.configuration.denied_commands
-    Ask::Rails.configuration.denied_commands = [/rm/, /dropdb/]
+    original_denied = Ask::Rails::Harness.configuration.denied_commands
+    Ask::Rails::Harness.configuration.denied_commands = [/rm/, /dropdb/]
 
     result = @run_command.execute(command: "rm -rf /tmp/test")
     assert_instance_of Ask::Result, result
     assert result.error?
     assert_includes result.to_s, "rm"
   ensure
-    Ask::Rails.configuration.denied_commands = original_denied
+    Ask::Rails::Harness.configuration.denied_commands = original_denied
   end
 
   def test_run_command_allowed_by_allowlist
-    original_allowed = Ask::Rails.configuration.allowed_commands
-    original_denied = Ask::Rails.configuration.denied_commands
-    Ask::Rails.configuration.allowed_commands = [/^echo /]
-    Ask::Rails.configuration.denied_commands = nil
+    original_allowed = Ask::Rails::Harness.configuration.allowed_commands
+    original_denied = Ask::Rails::Harness.configuration.denied_commands
+    Ask::Rails::Harness.configuration.allowed_commands = [/^echo /]
+    Ask::Rails::Harness.configuration.denied_commands = nil
 
     result = @run_command.execute(command: "echo hello")
     assert result.ok?, "Expected success but got: #{result.to_s}"
     assert_includes result.output[:output], "hello"
   ensure
-    Ask::Rails.configuration.allowed_commands = original_allowed
-    Ask::Rails.configuration.denied_commands = original_denied
+    Ask::Rails::Harness.configuration.allowed_commands = original_allowed
+    Ask::Rails::Harness.configuration.denied_commands = original_denied
   end
 
   def test_run_command_blocked_when_not_in_allowlist
-    original_allowed = Ask::Rails.configuration.allowed_commands
-    original_denied = Ask::Rails.configuration.denied_commands
-    Ask::Rails.configuration.allowed_commands = [/^echo /]
-    Ask::Rails.configuration.denied_commands = nil
+    original_allowed = Ask::Rails::Harness.configuration.allowed_commands
+    original_denied = Ask::Rails::Harness.configuration.denied_commands
+    Ask::Rails::Harness.configuration.allowed_commands = [/^echo /]
+    Ask::Rails::Harness.configuration.denied_commands = nil
 
     result = @run_command.execute(command: "ls /tmp")
     assert_instance_of Ask::Result, result
     assert result.error?
     assert_includes result.to_s, "not match any allowed"
   ensure
-    Ask::Rails.configuration.allowed_commands = original_allowed
-    Ask::Rails.configuration.denied_commands = original_denied
+    Ask::Rails::Harness.configuration.allowed_commands = original_allowed
+    Ask::Rails::Harness.configuration.denied_commands = original_denied
   end
 
   def test_run_command_deny_takes_precedence_over_allow
-    original_allowed = Ask::Rails.configuration.allowed_commands
-    original_denied = Ask::Rails.configuration.denied_commands
-    Ask::Rails.configuration.allowed_commands = [/^echo /]
-    Ask::Rails.configuration.denied_commands = [/hello/]
+    original_allowed = Ask::Rails::Harness.configuration.allowed_commands
+    original_denied = Ask::Rails::Harness.configuration.denied_commands
+    Ask::Rails::Harness.configuration.allowed_commands = [/^echo /]
+    Ask::Rails::Harness.configuration.denied_commands = [/hello/]
 
     result = @run_command.execute(command: "echo hello")
     assert_instance_of Ask::Result, result
     assert result.error?
   ensure
-    Ask::Rails.configuration.allowed_commands = original_allowed
-    Ask::Rails.configuration.denied_commands = original_denied
+    Ask::Rails::Harness.configuration.allowed_commands = original_allowed
+    Ask::Rails::Harness.configuration.denied_commands = original_denied
   end
 
   def test_run_command_respects_environment_allowed_commands
     original_env = Rails.env
-    original_allowed = Ask::Rails.configuration.allowed_commands
-    original_denied = Ask::Rails.configuration.denied_commands
-    original_environments = Ask::Rails.configuration.environments.dup
+    original_allowed = Ask::Rails::Harness.configuration.allowed_commands
+    original_denied = Ask::Rails::Harness.configuration.denied_commands
+    original_environments = Ask::Rails::Harness.configuration.environments.dup
     Rails.env = "staging"
 
-    Ask::Rails.configuration.environment :staging do |env|
+    Ask::Rails::Harness.configuration.environment :staging do |env|
       env.allowed_commands = [/^echo /]
     end
 
@@ -168,22 +168,22 @@ class ToolsTest < Minitest::Test
     assert_includes result.output[:output], "staging_only"
   ensure
     Rails.env = original_env
-    Ask::Rails.configuration.allowed_commands = original_allowed
-    Ask::Rails.configuration.denied_commands = original_denied
-    Ask::Rails.configuration.environments.clear
-    Ask::Rails.configuration.environments.merge!(original_environments)
+    Ask::Rails::Harness.configuration.allowed_commands = original_allowed
+    Ask::Rails::Harness.configuration.denied_commands = original_denied
+    Ask::Rails::Harness.configuration.environments.clear
+    Ask::Rails::Harness.configuration.environments.merge!(original_environments)
   end
 
   def test_run_command_environment_deny_takes_precedence_over_global_allow
     original_env = Rails.env
-    original_allowed = Ask::Rails.configuration.allowed_commands
-    original_denied = Ask::Rails.configuration.denied_commands
-    original_environments = Ask::Rails.configuration.environments.dup
+    original_allowed = Ask::Rails::Harness.configuration.allowed_commands
+    original_denied = Ask::Rails::Harness.configuration.denied_commands
+    original_environments = Ask::Rails::Harness.configuration.environments.dup
     Rails.env = "staging"
 
     # Global allows everything, but staging denies specific commands
-    Ask::Rails.configuration.allowed_commands = nil
-    Ask::Rails.configuration.environment :staging do |env|
+    Ask::Rails::Harness.configuration.allowed_commands = nil
+    Ask::Rails::Harness.configuration.environment :staging do |env|
       env.denied_commands = [/dropdb/]
     end
 
@@ -192,19 +192,19 @@ class ToolsTest < Minitest::Test
     assert_includes result.to_s, "dropdb"
   ensure
     Rails.env = original_env
-    Ask::Rails.configuration.allowed_commands = original_allowed
-    Ask::Rails.configuration.denied_commands = original_denied
-    Ask::Rails.configuration.environments.clear
-    Ask::Rails.configuration.environments.merge!(original_environments)
+    Ask::Rails::Harness.configuration.allowed_commands = original_allowed
+    Ask::Rails::Harness.configuration.denied_commands = original_denied
+    Ask::Rails::Harness.configuration.environments.clear
+    Ask::Rails::Harness.configuration.environments.merge!(original_environments)
   end
 
   def test_run_command_ignores_other_environment_rules
     original_env = Rails.env
-    original_environments = Ask::Rails.configuration.environments.dup
+    original_environments = Ask::Rails::Harness.configuration.environments.dup
     Rails.env = "development"
 
     # Production has strict rules, but development should be unaffected
-    Ask::Rails.configuration.environment :production do |env|
+    Ask::Rails::Harness.configuration.environment :production do |env|
       env.denied_commands = [/echo/]
     end
 
@@ -212,22 +212,22 @@ class ToolsTest < Minitest::Test
     assert result.ok?
   ensure
     Rails.env = original_env
-    Ask::Rails.configuration.environments.clear
-    Ask::Rails.configuration.environments.merge!(original_environments)
+    Ask::Rails::Harness.configuration.environments.clear
+    Ask::Rails::Harness.configuration.environments.merge!(original_environments)
   end
 
   def test_run_command_unchanged_when_no_rules
-    original_allowed = Ask::Rails.configuration.allowed_commands
-    original_denied = Ask::Rails.configuration.denied_commands
-    Ask::Rails.configuration.allowed_commands = nil
-    Ask::Rails.configuration.denied_commands = nil
+    original_allowed = Ask::Rails::Harness.configuration.allowed_commands
+    original_denied = Ask::Rails::Harness.configuration.denied_commands
+    Ask::Rails::Harness.configuration.allowed_commands = nil
+    Ask::Rails::Harness.configuration.denied_commands = nil
 
     result = @run_command.execute(command: "echo test12345")
     assert result.ok?
     assert_includes result.output[:output], "test12345"
   ensure
-    Ask::Rails.configuration.allowed_commands = original_allowed
-    Ask::Rails.configuration.denied_commands = original_denied
+    Ask::Rails::Harness.configuration.allowed_commands = original_allowed
+    Ask::Rails::Harness.configuration.denied_commands = original_denied
   end
 
   def test_search_codebase_defines_correct_params
@@ -260,27 +260,27 @@ class ToolsTest < Minitest::Test
   end
 
   def test_tool_inherits_from_ask_tool
-    assert Ask::Rails::Tools::ReadFile.ancestors.include?(Ask::Tool)
-    assert Ask::Rails::Tools::RunCommand.ancestors.include?(Ask::Tool)
-    assert Ask::Rails::Tools::SearchCodebase.ancestors.include?(Ask::Tool)
-    assert Ask::Rails::Tools::ReadRoutes.ancestors.include?(Ask::Tool)
-    assert Ask::Rails::Tools::QueryDatabase.ancestors.include?(Ask::Tool)
-    assert Ask::Rails::Tools::ReadModel.ancestors.include?(Ask::Tool)
-    assert Ask::Rails::Tools::ReadLog.ancestors.include?(Ask::Tool)
+    assert Ask::Rails::Harness::Tools::ReadFile.ancestors.include?(Ask::Tool)
+    assert Ask::Rails::Harness::Tools::RunCommand.ancestors.include?(Ask::Tool)
+    assert Ask::Rails::Harness::Tools::SearchCodebase.ancestors.include?(Ask::Tool)
+    assert Ask::Rails::Harness::Tools::ReadRoutes.ancestors.include?(Ask::Tool)
+    assert Ask::Rails::Harness::Tools::QueryDatabase.ancestors.include?(Ask::Tool)
+    assert Ask::Rails::Harness::Tools::ReadModel.ancestors.include?(Ask::Tool)
+    assert Ask::Rails::Harness::Tools::ReadLog.ancestors.include?(Ask::Tool)
   end
 
   def test_tool_inherits_audit_log_instrumentation
-    assert_respond_to Ask::Rails::Tools::ReadFile, :session_id
-    assert_respond_to Ask::Rails::Tools::ReadFile, :session_id=
-    assert_respond_to Ask::Rails::Tool, :session_id
+    assert_respond_to Ask::Rails::Harness::Tools::ReadFile, :session_id
+    assert_respond_to Ask::Rails::Harness::Tools::ReadFile, :session_id=
+    assert_respond_to Ask::Rails::Harness::Tool, :session_id
   end
 
   def test_tool_call_invokes_audit_log
     # Set a session ID so the audit log correlates the call
-    Ask::Rails::Tool.session_id = "test-session-123"
+    Ask::Rails::Harness::Tool.session_id = "test-session-123"
 
     log_entries = []
-    subscriber = ActiveSupport::Notifications.subscribe("audit_log.ask_rails") do |_name, _start, _finish, _id, payload|
+    subscriber = ActiveSupport::Notifications.subscribe("audit_log.ask_rails_harness") do |_name, _start, _finish, _id, payload|
       log_entries << payload
     end
 
@@ -292,14 +292,14 @@ class ToolsTest < Minitest::Test
     assert_equal "read_file", log_entries.first[:tool_name]
   ensure
     ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
-    Ask::Rails::Tool.session_id = nil
+    Ask::Rails::Harness::Tool.session_id = nil
   end
 
   def test_tool_call_audit_log_includes_session_id
-    Ask::Rails::Tool.session_id = "session-456"
+    Ask::Rails::Harness::Tool.session_id = "session-456"
 
     entry = nil
-    subscriber = ActiveSupport::Notifications.subscribe("audit_log.ask_rails") do |*args|
+    subscriber = ActiveSupport::Notifications.subscribe("audit_log.ask_rails_harness") do |*args|
       entry = args.last
     end
 
@@ -308,14 +308,14 @@ class ToolsTest < Minitest::Test
     assert_equal "session-456", entry[:session_id]
   ensure
     ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
-    Ask::Rails::Tool.session_id = nil
+    Ask::Rails::Harness::Tool.session_id = nil
   end
 
   def test_tool_call_audit_log_records_duration
-    Ask::Rails::Tool.session_id = "duration-test"
+    Ask::Rails::Harness::Tool.session_id = "duration-test"
 
     entry = nil
-    subscriber = ActiveSupport::Notifications.subscribe("audit_log.ask_rails") do |*args|
+    subscriber = ActiveSupport::Notifications.subscribe("audit_log.ask_rails_harness") do |*args|
       entry = args.last
     end
 
@@ -325,7 +325,7 @@ class ToolsTest < Minitest::Test
     assert_operator entry[:duration_ms], :>=, 0
   ensure
     ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
-    Ask::Rails::Tool.session_id = nil
+    Ask::Rails::Harness::Tool.session_id = nil
   end
 
   # --- QueryDatabase tests ---

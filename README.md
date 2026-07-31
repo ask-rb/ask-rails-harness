@@ -1,6 +1,8 @@
-# ask-rails
+# ask-rails-harness
 
 An admin AI agent for your Rails app. Mount the engine, get a chat interface at `/ask` that can inspect your code, query your database, read logs, and help you debug — all through an authenticated admin UI.
+
+> **Previously developed as `ask-rails` (v0.1.0–0.11.1).** Renamed to `ask-rails-harness` for clarity — this gem is the *harness* that wraps an AI agent with Rails-aware tools, environment, state, and feedback for internal/admin use.
 
 ## Who is this for?
 
@@ -11,18 +13,18 @@ For building customer-facing AI agents, use `ask-agent` directly with your own t
 
 ## What it gives you
 
-- **7 Rails-aware tools**: `ReadFile`, `QueryDatabase`, `ReadRoutes`, `ReadModel`, `ReadLog`, `RunCommand`, `SearchCodebase`
+- **9 Rails-aware tools**: `ReadFile`, `QueryDatabase`, `ReadRoutes`, `ReadModel`, `ReadLog`, `RunCommand`, `SearchCodebase`, `SchemaGraph`, `RouteInspector`
 - **Admin chat UI**: Mount the engine, get a working chat at `/ask` with SSE streaming
 - **Auth integration**: Protect `/ask` behind your existing Devise/authentication
 - **AR persistence**: Agent sessions survive server restarts
-- **Service discovery**: Auto-detects installed ask-* service gems
+- **Service discovery**: Auto-detects installed ask-\* service gems
 - **Skills**: Built-in guides for Rails debugging, deployment, and database performance
 
 ## Installation
 
 ```bash
-bundle add ask-rails
-rails generate ask_rails:install
+bundle add ask-rails-harness
+rails generate ask_rails_harness:install
 ```
 
 ## Quick Start
@@ -35,7 +37,7 @@ Rails.application.routes.draw do
   # ... your routes ...
 
   authenticate :user, ->(u) { u.admin? } do
-    mount Ask::Rails::Engine, at: "/ask"
+    mount Ask::Rails::Harness::Engine, at: "/ask"
   end
 end
 ```
@@ -47,8 +49,8 @@ Then visit `/ask` in your browser.
 ### Configuration
 
 ```ruby
-# config/initializers/ask_rails.rb
-Ask::Rails.configure do |c|
+# config/initializers/ask_rails_harness.rb
+Ask::Rails::Harness.configure do |c|
   c.default_model = "claude-sonnet-4"
   c.max_turns = 50
 end
@@ -58,16 +60,16 @@ end
 
 ```ruby
 # From any controller, view, or job
-session = Ask::Rails.agent_session
+session = Ask::Rails::Harness.agent_session
 session.run("Find all open issues labeled 'bug' in our repo")
 ```
 
 ### Route Helpers
 
 ```ruby
-ask_rails.root_path               # => /ask
-ask_rails.sessions_path           # => /ask/sessions
-ask_rails.session_messages_path(session_id) # => /ask/sessions/:id/messages
+ask_rails_harness.root_path               # => /ask
+ask_rails_harness.sessions_path           # => /ask/sessions
+ask_rails_harness.session_messages_path(session_id) # => /ask/sessions/:id/messages
 ```
 
 ### Auth
@@ -75,8 +77,8 @@ ask_rails.session_messages_path(session_id) # => /ask/sessions/:id/messages
 By default, the admin chat is unprotected. Add auth in your routes (as shown above) or set a custom check:
 
 ```ruby
-# config/initializers/ask_rails.rb
-Ask::Rails::Auth.check = -> {
+# config/initializers/ask_rails_harness.rb
+Ask::Rails::Harness::Auth.check = -> {
   redirect_to main_app.login_path unless current_user&.admin?
 }
 ```
@@ -92,6 +94,8 @@ Ask::Rails::Auth.check = -> {
 | `ReadLog` | Read log files with level/search filtering |
 | `RunCommand` | Run shell commands in the app root |
 | `SearchCodebase` | Grep the codebase for patterns |
+| `SchemaGraph` | Full schema introspection — all models, tables, columns, associations |
+| `RouteInspector` | Parsed route table with filters |
 
 ## Engine Routes
 
@@ -105,7 +109,7 @@ GET  /ask/sessions/:id/stream  → SSE stream for existing session
 
 ## Compared to ask-agent
 
-| `ask-agent` | `ask-rails` |
+| `ask-agent` | `ask-rails-harness` |
 |---|---|
 | Build external-facing agents | Build an internal admin co-pilot |
 | Bring your own tools | Ships Rails-specific tools |

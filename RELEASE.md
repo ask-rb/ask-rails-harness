@@ -1,4 +1,4 @@
-# Release Process — ask-ask-rails
+# Release Process — ask-rails-harness
 
 ## Prerequisites
 
@@ -8,7 +8,7 @@
 
 ## Release Steps
 
-1. Update the version in `lib/ask-rails/version.rb`
+1. Update the version in `lib/ask/rails/harness/version.rb`
 2. Update CHANGELOG.md with the new version and date
 3. Run tests: `bundle exec rake test`
 4. Build: `bundle exec rake build`
@@ -18,7 +18,7 @@
 
 ```bash
 # Release
-cd ask-rails
+cd ask-rails-harness
 bundle exec rake release
 ```
 
