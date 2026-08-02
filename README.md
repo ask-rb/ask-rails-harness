@@ -1,24 +1,10 @@
 # ask-rails-harness
 
-An admin AI agent for your Rails app. Mount the engine, get a chat interface at `/ask` that can inspect your code, query your database, read logs, and help you debug — all through an authenticated admin UI.
+[![Gem Version](https://badge.fury.io/rb/ask-rails-harness.svg)](https://badge.fury.io/rb/ask-rails-harness)
 
-> **Previously developed as `ask-rails` (v0.1.0–0.11.1).** Renamed to `ask-rails-harness` for clarity — this gem is the *harness* that wraps an AI agent with Rails-aware tools, environment, state, and feedback for internal/admin use.
+Admin AI copilot for Rails apps. Mounts a Rails Engine at `/ask` with an admin chat UI and 9 Rails-aware tools that inspect your code, query your database, read logs, and help you debug. For internal/admin use only: the agent has direct access to your database, file system, and shell.
 
-## Who is this for?
-
-- **Rails developers** who want an AI co-pilot that understands their app's codebase, schema, routes, and logs
-- **Internal/Admin use only** — the agent has direct access to your database, file system, and shell. Not for external/customer-facing use.
-
-For building customer-facing AI agents, use `ask-agent` directly with your own tools and UI.
-
-## What it gives you
-
-- **9 Rails-aware tools**: `ReadFile`, `QueryDatabase`, `ReadRoutes`, `ReadModel`, `ReadLog`, `RunCommand`, `SearchCodebase`, `SchemaGraph`, `RouteInspector`
-- **Admin chat UI**: Mount the engine, get a working chat at `/ask` with SSE streaming
-- **Auth integration**: Protect `/ask` behind your existing Devise/authentication
-- **AR persistence**: Agent sessions survive server restarts
-- **Service discovery**: Auto-detects installed ask-\* service gems
-- **Skills**: Built-in guides for Rails debugging, deployment, and database performance
+Previously released as `ask-rails` (v0.1.0-0.11.1) and renamed to `ask-rails-harness`. For customer-facing agents, use [ask-agent](https://github.com/ask-rb/ask-agent) directly.
 
 ## Installation
 
@@ -27,36 +13,21 @@ bundle add ask-rails-harness
 rails generate ask_rails_harness:install
 ```
 
-## Quick Start
+The generator creates `config/initializers/ask_rails_harness.rb`, the `ask_sessions` and `ask_audit_logs` migrations, and an `app/tools/` directory. Requires Rails 7.1+.
 
-Add the engine mount and auth protection to `config/routes.rb`:
+Run the migration, then mount the engine in `config/routes.rb`:
 
 ```ruby
-# config/routes.rb
 Rails.application.routes.draw do
-  # ... your routes ...
-
   authenticate :user, ->(u) { u.admin? } do
     mount Ask::Rails::Harness::Engine, at: "/ask"
   end
 end
 ```
 
-Then visit `/ask` in your browser.
+Visit `/ask` in your browser.
 
-## Usage
-
-### Configuration
-
-```ruby
-# config/initializers/ask_rails_harness.rb
-Ask::Rails::Harness.configure do |c|
-  c.default_model = "claude-sonnet-4"
-  c.max_turns = 50
-end
-```
-
-### Programmatic Access
+## Quick Start
 
 ```ruby
 # From any controller, view, or job
@@ -64,58 +35,59 @@ session = Ask::Rails::Harness.agent_session
 session.run("Find all open issues labeled 'bug' in our repo")
 ```
 
-### Route Helpers
-
-```ruby
-ask_rails_harness.root_path               # => /ask
-ask_rails_harness.sessions_path           # => /ask/sessions
-ask_rails_harness.session_messages_path(session_id) # => /ask/sessions/:id/messages
-```
-
-### Auth
-
-By default, the admin chat is unprotected. Add auth in your routes (as shown above) or set a custom check:
+## Configuration
 
 ```ruby
 # config/initializers/ask_rails_harness.rb
-Ask::Rails::Harness::Auth.check = -> {
-  redirect_to main_app.login_path unless current_user&.admin?
-}
+Ask::Rails::Harness.configure do |c|
+  c.default_model = "claude-sonnet-4"
+  c.max_turns = 50
+  c.tool_concurrency = 5
+  c.allowed_commands = [/^rails /]
+  c.denied_commands = [/rm/, /dropdb/]
+  c.max_session_age = 7.days
+  c.max_sessions = 100
+  c.environment :production do |env|
+    env.mode = :read_only
+  end
+end
 ```
+
+Available settings: `default_model`, `max_turns`, `tool_concurrency`, `system_prompt`, `persistence_adapter`, `current_user`, `allowed_commands`, `denied_commands`, `max_session_age`, `max_sessions`, and per-environment permissions via `environment(name) { |env| env.mode = ... }`.
+
+## Essential API
+
+- `Ask::Rails::Harness.agent_session`: build an agent session with the configured tools and prompt
+- `Ask::Rails::Harness.configure { |c| ... }`: configuration (see above)
+- `Ask::Rails::Harness.cleanup!`: prune old sessions and audit logs; also available as `rails ask_rails_harness:cleanup`
+- `Ask::Rails::Harness::Persistence`: ActiveRecord session persistence backed by the `ask_sessions` table
+- `Ask::Rails::Harness::Auth.check = -> { ... }`: auth proc evaluated in the controller context; the engine routes are unprotected by default
+- Audit log: every tool call is recorded in `ask_audit_logs` and broadcast as the `audit_log.ask_rails_harness` ActiveSupport notification
 
 ## Tools
 
 | Tool | What it does |
 |---|---|
-| `ReadFile` | Read any file (relative to `Rails.root`) |
-| `QueryDatabase` | Run read-only SQL (rejects non-SELECT in production) |
-| `ReadModel` | Inspect AR model schema, associations, validations |
-| `ReadRoutes` | View `config/routes.rb` |
+| `ReadFile` | Read any file relative to `Rails.root` |
+| `QueryDatabase` | Read-only SQL (non-SELECT rejected in production) |
+| `ReadModel` | Inspect an ActiveRecord model's columns, associations, validations |
+| `ReadRoutes` | Read `config/routes.rb` |
 | `ReadLog` | Read log files with level/search filtering |
 | `RunCommand` | Run shell commands in the app root |
-| `SearchCodebase` | Grep the codebase for patterns |
-| `SchemaGraph` | Full schema introspection — all models, tables, columns, associations |
+| `SearchCodebase` | Grep the codebase |
+| `SchemaGraph` | Full schema introspection: models, tables, columns, associations |
 | `RouteInspector` | Parsed route table with filters |
 
-## Engine Routes
+## Full documentation
 
+The full ask-rb documentation lives at https://ask-rb.github.io/ask-docs. [Rails setup](https://ask-rb.github.io/ask-docs/rails/setup) covers ask-rails-harness in depth. API reference: https://ask-rb.github.io/ask-docs/reference/api.
+
+## Development
+
+```bash
+bundle install
+bundle exec rake test
 ```
-GET  /ask                    → Chat UI
-POST /ask/sessions           → Create new session
-POST /ask/sessions/:id/messages → Send message (SSE streamed response)
-GET  /ask/sessions/:id/messages → Get message history
-GET  /ask/sessions/:id/stream  → SSE stream for existing session
-```
-
-## Compared to ask-agent
-
-| `ask-agent` | `ask-rails-harness` |
-|---|---|
-| Build external-facing agents | Build an internal admin co-pilot |
-| Bring your own tools | Ships Rails-specific tools |
-| Bring your own UI | Ships an admin chat UI |
-| Any Ruby app | Rails apps only |
-| General purpose | Development, debugging, ops |
 
 ## License
 
