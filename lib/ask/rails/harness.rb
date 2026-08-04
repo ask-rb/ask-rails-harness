@@ -3,6 +3,7 @@
 require "rails"
 require "ask/agent"
 require "ask/auth"
+require "time"
 
 module Ask
   module Rails
