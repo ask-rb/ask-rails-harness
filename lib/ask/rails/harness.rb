@@ -65,7 +65,7 @@ module Ask
           env_mode = configuration.effective_mode
           return {} unless env_mode
 
-          perms = Ask::Agent::Extensions::Permissions.new(mode: env_mode)
+          perms = Ask::Agent::Policies::Permissions.new(mode: env_mode)
           { before_tool: [perms.method(:before_tool_call)] }
         rescue ArgumentError => e
           warn "[ask-rails-harness] Invalid environment mode: #{e.message}"

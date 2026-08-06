@@ -23,7 +23,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rails", ">= 7.1"
   spec.add_dependency "ask-tools", ">= 0.1"
   spec.add_dependency "ask-tools-shell", ">= 0.1"
-  spec.add_dependency "ask-agent", ">= 0.1"
+  spec.add_dependency "ask-agent", ">= 0.28.0"
   spec.add_dependency "ask-auth", ">= 0.1"
 
   spec.add_development_dependency "sqlite3", ">= 2.0"
