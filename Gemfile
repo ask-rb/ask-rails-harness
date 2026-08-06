@@ -9,4 +9,5 @@ group :test do
   gem "faraday", "~> 2.0"
   gem "faraday-multipart"
   gem "base64"
+  gem "ask-state-providers"
 end
