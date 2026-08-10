@@ -15,6 +15,8 @@ class RunTestsTest < Minitest::Test
     ROOT = File.expand_path("..", __dir__)
     $LOAD_PATH.unshift(#{File.expand_path("../../lib", __dir__).inspect})
     require "minitest"
+    File.write(File.join(ROOT, "env-dump.txt"),
+               ENV.select { |k, _| k == "RAILS_MAX_THREADS" }.to_h.to_s)
 
     files = ARGV.select { |arg| arg.end_with?(".rb") }
     ARGV.replace(ARGV - files)
@@ -76,11 +78,15 @@ class RunTestsTest < Minitest::Test
     # own env predictable while spawning.
     @orig_rubyopt = ENV["RUBYOPT"]
     ENV["RUBYOPT"] = nil
+    # Mirror production: the harness MCP server runs with a small pool cap.
+    @orig_rails_max_threads = ENV["RAILS_MAX_THREADS"]
+    ENV["RAILS_MAX_THREADS"] = "1"
   end
 
   def teardown
     @restore_root.call
     ENV["RUBYOPT"] = @orig_rubyopt
+    ENV["RAILS_MAX_THREADS"] = @orig_rails_max_threads
     FileUtils.rm_rf(@root)
   end
 
@@ -201,9 +207,18 @@ class RunTestsTest < Minitest::Test
 
   # --- integration ---------------------------------------------------------
 
+  def test_test_children_do_not_inherit_rails_max_threads
+    # The harness server runs with RAILS_MAX_THREADS=1 (small pool); test runs
+    # are a separate concern and must get the app's normal pool sizes back.
+    result = @tool.call({ name: "test_passes" })
+
+    assert result.ok?, "run should succeed: #{result.error_message}"
+    dump = File.read(File.join(@root, "env-dump.txt"))
+    assert_equal "{}", dump, "RAILS_MAX_THREADS must be stripped from test children"
+  end
+
   def test_execute_runs_suite_and_reports_structured_results
     result = @tool.call({})
-
     assert result.ok?, "run should succeed: #{result.error_message}"
     report = result.output
     assert_equal "minitest", report[:framework]

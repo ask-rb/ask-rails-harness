@@ -115,7 +115,11 @@ module Ask
           end
 
           def run(command, env, log_path, timeout)
-            pid = Process.spawn(env, *command, chdir: rails_root.to_s,
+            # The harness server may run with a deliberately small pool
+            # (e.g. RAILS_MAX_THREADS=1 in its MCP config). Test runs are a
+            # separate concern — let them use the app's normal pool sizes.
+            child_env = env.merge("RAILS_MAX_THREADS" => nil)
+            pid = Process.spawn(child_env, *command, chdir: rails_root.to_s,
                                 out: [log_path.to_s, "w"], err: [:child, :out])
             status = nil
             timed_out = false

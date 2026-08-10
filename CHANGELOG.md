@@ -1,3 +1,13 @@
+## [0.2.1] — 2026-08-10
+
+### Fixed
+
+- **`run_tests` strips `RAILS_MAX_THREADS` for spawned test runs** — harness
+  servers may run with a deliberately small pool (e.g. `RAILS_MAX_THREADS=1`
+  in their MCP config). Without this, the cap leaked into `bin/rails test`
+  children, where it would serialize parallel tests on a single connection.
+  Test runs now always get the app's normal pool sizes.
+
 ## [0.2.0] — 2026-08-10
 
 ### Added
