@@ -68,15 +68,18 @@ Available settings: `default_model`, `max_turns`, `tool_concurrency`, `system_pr
 
 | Tool | What it does |
 |---|---|
-| `ReadFile` | Read any file relative to `Rails.root` |
 | `QueryDatabase` | Read-only SQL (non-SELECT rejected in production) |
 | `ReadModel` | Inspect an ActiveRecord model's columns, associations, validations |
-| `ReadRoutes` | Read `config/routes.rb` |
 | `ReadLog` | Read log files with level/search filtering |
-| `RunCommand` | Run shell commands in the app root |
-| `SearchCodebase` | Grep the codebase |
+| `RunCommand` | Run shell commands in the app root, gated by permission rules |
 | `SchemaGraph` | Full schema introspection: models, tables, columns, associations |
 | `RouteInspector` | Parsed route table with filters |
+| `RunTests` | Structured test results with failure reruns (minitest/rspec) |
+
+Generic file and search capabilities (read, grep, edit) are provided by the
+agent's native tools; the harness focuses on what only a Rails-aware layer
+can give an agent: database access, schema/model introspection, routes,
+logs, and tests — all permission-gated and audited.
 
 ## Full documentation
 

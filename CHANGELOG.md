@@ -1,3 +1,15 @@
+## [0.3.0] — 2026-08-10
+
+### Removed
+
+- **`ReadFile`, `SearchCodebase`, `ReadRoutes` tools removed** — generic
+  file-read and grep capabilities that coding agents provide natively.
+  `RouteInspector` fully supersedes `ReadRoutes` (parsed table vs raw file,
+  including `draw`-split and engine routes). The harness now ships only
+  Rails-aware tools: `QueryDatabase`, `ReadModel`, `ReadLog`, `RunCommand`,
+  `SchemaGraph`, `RouteInspector`, `RunTests`. Skills updated to use the
+  shell `Read` tool and `RouteInspector`.
+
 ## [0.2.1] — 2026-08-10
 
 ### Fixed

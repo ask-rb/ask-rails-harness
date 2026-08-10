@@ -15,7 +15,7 @@ RunCommand.new.call(command: "bin/rails db:migrate:status | grep 'down'")
 ```
 
 If there are pending migrations:
-1. Review them with `ReadFile.new.call(path: "db/migrate/<TIMESTAMP>_migration_name.rb")`
+1. Review them with `Read.new.call(path: Rails.root.join("db/migrate/<TIMESTAMP>_migration_name.rb").to_s)`
 2. Verify they're reversible: check `change`, `up`/`down`, or `reversible` blocks
 3. Check for data migrations (e.g., backfills) that should run separately
 4. Estimate execution time — large tables may need locking strategy
@@ -38,8 +38,8 @@ For importmap or esbuild/vite setups:
 
 ```ruby
 # Check build config
-ReadFile.new.call(path: "package.json")
-ReadFile.new.call(path: "vite.config.ts") if File.exist?("Rails.root.join('vite.config.ts')")
+Read.new.call(path: Rails.root.join("package.json").to_s)
+Read.new.call(path: Rails.root.join("vite.config.ts").to_s) if Rails.root.join("vite.config.ts").exist?
 ```
 
 ## Step 3: Review Credentials and Secrets
@@ -70,7 +70,7 @@ Glob.new.call(pattern: "app/jobs/**/*.rb")
 For any new or modified jobs:
 1. Verify the queue adapter is configured in `production.rb`
 2. Check for job retry logic that might affect rollback
-3. Review `ReadFile.new.call(path: "config/sidekiq.yml")` if using Sidekiq
+3. Review `Read.new.call(path: Rails.root.join("config/sidekiq.yml").to_s)` if using Sidekiq
 4. Verify scheduled/cron jobs if using `sidekiq-cron` or `whenever`
 
 ## Step 5: Review Production Log for Pre-deploy Issues
@@ -102,10 +102,10 @@ RunCommand.new.call(command: "bundle platform")
 Verify configuration files for the target environment:
 
 ```ruby
-ReadFile.new.call(path: "config/environments/production.rb")
-ReadFile.new.call(path: "config/database.yml")
-ReadFile.new.call(path: "config/cable.yml") if File.exist?("config/cable.yml")
-ReadFile.new.call(path: "config/storage.yml") if File.exist?("config/storage.yml")
+Read.new.call(path: Rails.root.join("config/environments/production.rb").to_s)
+Read.new.call(path: Rails.root.join("config/database.yml").to_s)
+Read.new.call(path: Rails.root.join("config/cable.yml").to_s) if Rails.root.join("config/cable.yml").exist?
+Read.new.call(path: Rails.root.join("config/storage.yml").to_s) if Rails.root.join("config/storage.yml").exist?
 ```
 
 Key production checks:

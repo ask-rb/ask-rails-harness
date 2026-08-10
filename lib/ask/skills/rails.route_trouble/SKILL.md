@@ -6,15 +6,17 @@ description: Step-by-step methodology for debugging routing issues in Rails
 Use this skill when a route is returning 404, you're getting route matching errors,
 or routes aren't behaving as expected in a Rails application.
 
-## Step 1: Read the Routes File
+## Step 1: Inspect the Route Table
 
-Start by examining the routes configuration:
+Start by examining the parsed route table:
 
 ```ruby
-ReadRoutes.new.call
+RouteInspector.new.call
 ```
 
-This reads `config/routes.rb` — the source of truth for all route definitions.
+This returns every route with its verb, path, controller, action, and name —
+covering routes split across `draw` files and engines that a raw read of
+`config/routes.rb` would miss.
 
 Look for:
 - The overall structure (namespaced, nested, shallow routes?)
@@ -82,7 +84,7 @@ error message tells you what routes were tried before failing.
 If the route exists but the controller isn't found:
 
 ```ruby
-ReadFile.new.call(path: "app/controllers/users_controller.rb")
+Read.new.call(path: Rails.root.join("app/controllers/users_controller.rb").to_s)
 ```
 
 ## Step 5: Check Namespace and Module Nesting

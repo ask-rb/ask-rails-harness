@@ -165,10 +165,7 @@ require_relative "harness/auth"
 require_relative "harness/persistence"
 require_relative "harness/service_discovery"
 require_relative "harness/tool"
-require_relative "harness/tools/read_file"
 require_relative "harness/tools/run_command"
-require_relative "harness/tools/search_codebase"
-require_relative "harness/tools/read_routes"
 require_relative "harness/tools/query_database"
 require_relative "harness/tools/read_model"
 require_relative "harness/tools/read_log"
@@ -184,8 +181,7 @@ end
 
 # Define after all tool files are loaded so the constants resolve
 Ask::Rails::Harness::CORE_RAILS_TOOLS = [
-  Ask::Rails::Harness::Tools::ReadFile, Ask::Rails::Harness::Tools::RunCommand,
-  Ask::Rails::Harness::Tools::SearchCodebase, Ask::Rails::Harness::Tools::ReadRoutes,
+  Ask::Rails::Harness::Tools::RunCommand,
   Ask::Rails::Harness::Tools::QueryDatabase, Ask::Rails::Harness::Tools::ReadModel,
   Ask::Rails::Harness::Tools::ReadLog, Ask::Rails::Harness::Tools::SchemaGraph,
   Ask::Rails::Harness::Tools::RouteInspector, Ask::Rails::Harness::Tools::RunTests

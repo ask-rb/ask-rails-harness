@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email = ["kaka@myrrlabs.com"]
 
   spec.summary = "Admin AI copilot for Rails apps — inspect code, query DB, read logs, debug"
-  spec.description = "Rails Engine that mounts an admin AI agent at /ask. Ships 9 Rails-aware tools (ReadFile, QueryDatabase, ReadModel, ReadRoutes, RouteInspector, ReadLog, RunCommand, SearchCodebase, SchemaGraph), session persistence, audit logging, environment permissions, and service gem discovery. Previously developed as ask-rails (0.1.0–0.11.1)."
+  spec.description = "Rails Engine that mounts an admin AI agent at /ask. Ships Rails-aware tools (QueryDatabase, ReadModel, ReadLog, RunCommand, SchemaGraph, RouteInspector, RunTests), session persistence, audit logging, environment permissions, and service gem discovery. Previously developed as ask-rails (0.1.0–0.11.1)."
   spec.homepage = "https://github.com/ask-rb/ask-rails-harness"
   spec.license = "MIT"
 

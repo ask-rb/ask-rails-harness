@@ -4,92 +4,10 @@ require_relative "test_helper"
 
 class ToolsTest < Minitest::Test
   def setup
-    @read_file = Ask::Rails::Harness::Tools::ReadFile.new
     @run_command = Ask::Rails::Harness::Tools::RunCommand.new
-    @search_codebase = Ask::Rails::Harness::Tools::SearchCodebase.new
-    @read_routes = Ask::Rails::Harness::Tools::ReadRoutes.new
     @query_database = Ask::Rails::Harness::Tools::QueryDatabase.new
     @read_model = Ask::Rails::Harness::Tools::ReadModel.new
     @read_log = Ask::Rails::Harness::Tools::ReadLog.new
-  end
-
-  def test_read_file_defines_correct_params
-    assert_equal "read_file", @read_file.name
-    assert @read_file.parameters.key?(:path)
-  end
-
-  def test_read_file_executes_successfully
-    with_rails_root do |dir|
-      File.write(File.join(dir, "test.rb"), "hello")
-      result = @read_file.call(path: "test.rb")
-      assert_instance_of Hash, result
-      assert result[:content].is_a?(String), "read_file should return content"
-    end
-  end
-
-  def test_read_file_returns_error_for_missing_file
-    result = @read_file.call(path: "/nonexistent_path_12345_67890")
-    assert_instance_of Ask::Result, result
-    assert result.error?
-  end
-
-  def test_read_file_returns_content
-    with_temp_file("hello world") do |dir, path|
-      result = @read_file.call(path: path)
-      assert_instance_of Hash, result
-      assert_includes result[:content], "hello"
-    end
-  end
-
-  def test_search_codebase_defines_correct_params
-    assert_equal "search_codebase", @search_codebase.name
-    assert @search_codebase.parameters.key?(:pattern)
-    assert @search_codebase.parameters.key?(:path)
-  end
-
-  def test_search_codebase_returns_results
-    with_rails_root do |dir|
-      File.write(File.join(dir, "test.rb"), "UNIQUE_SEARCH_PATTERN_12345")
-      result = @search_codebase.call(pattern: "UNIQUE_SEARCH_PATTERN")
-      assert_instance_of Hash, result
-      assert result[:results].is_a?(Array), "search should return results array"
-    end
-  end
-
-  def test_search_codebase_returns_count
-    with_rails_root do |dir|
-      File.write(File.join(dir, "test.rb"), "SEARCH_COUNT_TEST")
-      result = @search_codebase.call(pattern: "SEARCH_COUNT_TEST")
-      assert_instance_of Hash, result
-      assert result[:count] >= 1, "should find at least 1 match"
-    end
-  end
-
-  def test_search_codebase_respects_path_filter
-    with_rails_root do |dir|
-      File.write(File.join(dir, "test.rb"), "PATH_FILTERED_PATTERN")
-      result = @search_codebase.call(pattern: "PATH_FILTERED_PATTERN", path: ".")
-      assert_instance_of Hash, result
-      assert result[:count] >= 1, "should find matches in specified path"
-    end
-  end
-
-  def test_read_routes_returns_content
-    with_rails_root do |dir|
-      File.write(File.join(dir, "config", "routes.rb"), "Rails.application.routes.draw do\nend")
-      result = @read_routes.call
-      assert_instance_of Hash, result
-      assert result[:content].is_a?(String), "read_routes should return content string"
-    end
-  end
-
-  def test_read_routes_returns_size
-    with_rails_root do |dir|
-      File.write(File.join(dir, "config", "routes.rb"), "Rails.application.routes.draw do\nend")
-      result = @read_routes.call
-      assert_instance_of Hash, result
-      assert result[:size].is_a?(Integer), "read_routes should return size"
-    end
   end
 
   def test_run_command_defines_correct_params
@@ -230,15 +148,6 @@ class ToolsTest < Minitest::Test
     Ask::Rails::Harness.configuration.denied_commands = original_denied
   end
 
-  def test_search_codebase_defines_correct_params
-    assert_equal "search_codebase", @search_codebase.name
-    assert @search_codebase.parameters.key?(:pattern)
-  end
-
-  def test_read_routes_has_no_required_params
-    assert_equal "read_routes", @read_routes.name
-  end
-
   def test_query_database_defines_correct_params
     assert_equal "query_database", @query_database.name
     assert @query_database.parameters.key?(:sql)
@@ -276,18 +185,15 @@ class ToolsTest < Minitest::Test
   end
 
   def test_tool_inherits_from_ask_tool
-    assert Ask::Rails::Harness::Tools::ReadFile.ancestors.include?(Ask::Tool)
     assert Ask::Rails::Harness::Tools::RunCommand.ancestors.include?(Ask::Tool)
-    assert Ask::Rails::Harness::Tools::SearchCodebase.ancestors.include?(Ask::Tool)
-    assert Ask::Rails::Harness::Tools::ReadRoutes.ancestors.include?(Ask::Tool)
     assert Ask::Rails::Harness::Tools::QueryDatabase.ancestors.include?(Ask::Tool)
     assert Ask::Rails::Harness::Tools::ReadModel.ancestors.include?(Ask::Tool)
     assert Ask::Rails::Harness::Tools::ReadLog.ancestors.include?(Ask::Tool)
   end
 
   def test_tool_inherits_audit_log_instrumentation
-    assert_respond_to Ask::Rails::Harness::Tools::ReadFile, :session_id
-    assert_respond_to Ask::Rails::Harness::Tools::ReadFile, :session_id=
+    assert_respond_to Ask::Rails::Harness::Tools::RunCommand, :session_id
+    assert_respond_to Ask::Rails::Harness::Tools::RunCommand, :session_id=
     assert_respond_to Ask::Rails::Harness::Tool, :session_id
   end
 
@@ -301,11 +207,11 @@ class ToolsTest < Minitest::Test
     end
 
     # Use a tool that will succeed
-    result = @read_file.call(path: "/tmp")
+    result = @run_command.call(command: "echo ok")
     assert_instance_of Ask::Result, result
 
     assert_equal 1, log_entries.length
-    assert_equal "read_file", log_entries.first[:tool_name]
+    assert_equal "run_command", log_entries.first[:tool_name]
   ensure
     ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
     Ask::Rails::Harness::Tool.session_id = nil
@@ -319,7 +225,7 @@ class ToolsTest < Minitest::Test
       entry = args.last
     end
 
-    @read_routes.call
+    @run_command.call(command: "echo ok")
 
     assert_equal "session-456", entry[:session_id]
   ensure
@@ -335,7 +241,7 @@ class ToolsTest < Minitest::Test
       entry = args.last
     end
 
-    @read_routes.call
+    @run_command.call(command: "echo ok")
 
     assert entry[:duration_ms].is_a?(Integer), "duration should be an integer"
     assert_operator entry[:duration_ms], :>=, 0
@@ -531,21 +437,9 @@ class ToolsTest < Minitest::Test
 
   def with_temp_dir
     Dir.mktmpdir do |dir|
-      # Set rails_root to the temp dir so search_codebase works
       orig_root = Rails.root
       Rails.define_singleton_method(:root) { Pathname.new(dir) }
       yield dir
-      Rails.define_singleton_method(:root) { orig_root }
-    end
-  end
-
-  def with_temp_file(content)
-    Dir.mktmpdir do |dir|
-      file = File.join(dir, "test_file.rb")
-      File.write(file, content)
-      orig_root = Rails.root
-      Rails.define_singleton_method(:root) { Pathname.new(dir) }
-      yield dir, "test_file.rb"
       Rails.define_singleton_method(:root) { orig_root }
     end
   end
