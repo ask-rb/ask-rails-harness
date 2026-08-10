@@ -30,12 +30,11 @@ class EngineTest < Minitest::Test
     assert_includes content, "Railtie"
   end
 
-  def test_configuration_file_exists
-    config_path = File.expand_path("../lib/ask/rails/harness/configuration.rb", __dir__)
-    assert File.exist?(config_path)
-    content = File.read(config_path)
-    assert_includes content, "default_model"
-    assert_includes content, "max_turns"
+  def test_configuration_is_aliased_to_the_generic_harness
+    assert_equal Ask::Ruby::Harness::Configuration, Ask::Rails::Harness::Configuration
+    config = Ask::Rails::Harness::Configuration.new
+    assert_equal "gpt-4o", config.default_model
+    assert_equal 25, config.max_turns
   end
 
   def test_ask_rails_module_responds_to_version

@@ -11,7 +11,7 @@ end
 
 # Load paths for local ask-rb gems (prefer local over installed gems)
 ask_rb_root = File.expand_path("../..", __dir__)
-%w[ask-core ask-tools ask-tools-shell ask-schema ask-skills ask-auth ask-instrumentation ask-llm-providers ask-agent ask-rails-harness ask-sandbox-providers ask-state-providers].each do |gem|
+%w[ask-core ask-tools ask-tools-shell ask-schema ask-skills ask-auth ask-instrumentation ask-llm-providers ask-agent ask-ruby-harness ask-rails-harness ask-sandbox-providers ask-state-providers].each do |gem|
   lib = File.join(ask_rb_root, gem, "lib")
   $LOAD_PATH.unshift lib if File.directory?(lib)
 end
@@ -27,17 +27,7 @@ require "ask/tools/shell"
 require "ask/result"
 
 require "ask/rails/harness"
-require "ask/rails/harness/audit_log"
-require "ask/rails/harness/environment_permissions"
 require "ask/rails/harness/tool"
-require "ask/rails/harness/tools/run_command"
-require "ask/rails/harness/tools/query_database"
-require "ask/rails/harness/tools/read_model"
-require "ask/rails/harness/tools/read_log"
-require "ask/rails/harness/tools/schema_graph"
-require "ask/rails/harness/tools/route_inspector"
-require "ask/rails/harness/tools/run_tests"
-require "ask/rails/harness/minitest_json_reporter"
 require "ask/rails/harness/service_discovery"
 
 require "minitest/autorun"

@@ -1,3 +1,26 @@
+## [0.4.0] — 2026-08-10
+
+### Changed
+
+- **Generic tools moved to the new `ask-ruby-harness` gem** — `RunCommand`,
+  `QueryDatabase`, `ReadModel`, `ReadLog`, `SchemaGraph`, and `RunTests` now
+  live in the language-agnostic harness (`Ask::Ruby::Harness`), which this
+  gem depends on. This gem keeps the Rails-native surface: the Engine
+  (mount at /ask), railtie, generators, auth, persistence, and
+  `RouteInspector`.
+- **Backward-compatible aliases** — `Ask::Rails::Harness::Tools::*`,
+  `Ask::Rails::Harness::AuditLog`, `Ask::Rails::Harness::Configuration`, and
+  `Ask::Rails::Harness::MinitestJsonReporter` still resolve (to the generic
+  implementations), and `Ask::Rails::Harness::Tool` subclasses the generic
+  base. `app_root` is pinned to `::Rails.root` by the railtie.
+- **Audit notification renamed** — the generic audit log now fires
+  `audit_log.ask_ruby_harness` (was `audit_log.ask_rails_harness`).
+
+### Removed
+
+- `lib/minitest/ask_rails_harness_plugin.rb` — superseded by
+  `minitest/ask_ruby_harness_plugin.rb` in ask-ruby-harness.
+
 ## [0.3.0] — 2026-08-10
 
 ### Removed

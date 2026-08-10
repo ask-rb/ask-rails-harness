@@ -17,6 +17,7 @@ module Ask
         end
 
         initializer "ask_rails_harness.configure" do |app|
+          Ask::Ruby::Harness.app_root = ::Rails.root
           Ask::Rails::Harness.configuration.default_model ||= ENV["ASK_DEFAULT_MODEL"] || "gpt-4o"
           Ask::Rails::Harness.configuration.max_turns ||= (ENV["ASK_MAX_TURNS"] || 25).to_i
         end
