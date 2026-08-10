@@ -39,6 +39,8 @@ require "ask/rails/harness/tools/read_model"
 require "ask/rails/harness/tools/read_log"
 require "ask/rails/harness/tools/schema_graph"
 require "ask/rails/harness/tools/route_inspector"
+require "ask/rails/harness/tools/run_tests"
+require "ask/rails/harness/minitest_json_reporter"
 require "ask/rails/harness/service_discovery"
 
 require "minitest/autorun"

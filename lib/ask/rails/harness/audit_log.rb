@@ -166,8 +166,10 @@ module Ask
                VALUES (#{values.join(', ')})"
             )
           rescue StandardError => e
-            # Silently fail — audit log should never crash the caller
-            Rails.logger.warn("[ask-rails-harness] Audit log write failed: #{e.message}") if defined?(Rails.logger)
+            # Silently fail — audit log should never crash the caller.
+            # ::Rails avoids the bare-`Rails` constant resolving to Ask::Rails;
+            # `&.` guards against Rails.logger returning nil (no app booted).
+            ::Rails.logger&.warn("[ask-rails-harness] Audit log write failed: #{e.message}") if defined?(::Rails.logger)
           end
 
           # Reset cached table check (useful in tests)

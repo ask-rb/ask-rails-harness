@@ -259,6 +259,22 @@ class ToolsTest < Minitest::Test
     assert @read_log.parameters.key?(:file)
   end
 
+  def test_read_log_executes_successfully
+    # Regression: bare `Rails` inside Ask::Rails::* resolves to the Ask::Rails
+    # module, so ReadLog used to raise NoMethodError (undefined method `env`).
+    with_rails_root do |dir|
+      log_dir = File.join(dir, "log")
+      FileUtils.mkdir_p(log_dir)
+      File.write(File.join(log_dir, "test.log"), "INFO line one\nERROR something broke\n")
+
+      result = @read_log.call(lines: 10)
+      assert_instance_of Hash, result
+      assert_equal 2, result[:total_lines]
+      assert_includes result[:lines].join, "something broke"
+      assert_equal "test", ::Rails.env
+    end
+  end
+
   def test_tool_inherits_from_ask_tool
     assert Ask::Rails::Harness::Tools::ReadFile.ancestors.include?(Ask::Tool)
     assert Ask::Rails::Harness::Tools::RunCommand.ancestors.include?(Ask::Tool)

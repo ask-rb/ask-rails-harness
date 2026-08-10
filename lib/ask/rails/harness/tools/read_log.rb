@@ -50,7 +50,9 @@ module Ask
 
           def resolve_log_path(custom_path)
             return rails_root.join(custom_path) if custom_path
-            rails_root.join("log", "#{Rails.env}.log")
+            # Use ::Rails (not Rails) — bare `Rails` inside the Ask::Rails::*
+            # namespace resolves to the Ask::Rails module itself.
+            rails_root.join("log", "#{::Rails.env}.log")
           end
 
           # Read from rotated archives too: log/production.log, .1, .2.gz, etc.

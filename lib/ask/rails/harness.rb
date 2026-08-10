@@ -174,6 +174,8 @@ require_relative "harness/tools/read_model"
 require_relative "harness/tools/read_log"
 require_relative "harness/tools/schema_graph"
 require_relative "harness/tools/route_inspector"
+require_relative "harness/tools/run_tests"
+require_relative "harness/minitest_json_reporter"
 
 # Railtie is loaded only when Rails is fully available
 if defined?(::Rails::Railtie)
@@ -186,5 +188,5 @@ Ask::Rails::Harness::CORE_RAILS_TOOLS = [
   Ask::Rails::Harness::Tools::SearchCodebase, Ask::Rails::Harness::Tools::ReadRoutes,
   Ask::Rails::Harness::Tools::QueryDatabase, Ask::Rails::Harness::Tools::ReadModel,
   Ask::Rails::Harness::Tools::ReadLog, Ask::Rails::Harness::Tools::SchemaGraph,
-  Ask::Rails::Harness::Tools::RouteInspector
+  Ask::Rails::Harness::Tools::RouteInspector, Ask::Rails::Harness::Tools::RunTests
 ].freeze
