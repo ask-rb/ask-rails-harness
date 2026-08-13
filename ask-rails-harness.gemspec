@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", ">= 7.1"
   spec.add_dependency "ask-ruby-harness", ">= 0.3.2"
-  spec.add_dependency "ask-auth", ">= 0.1"
+  spec.add_dependency "ask-auth", ">= 0.3.2"
 
   spec.add_development_dependency "sqlite3", ">= 2.0"
   spec.add_development_dependency "minitest", "~> 5.25"
